@@ -1,0 +1,49 @@
+name: CI/CD Pipeline for Fullstack Courswork
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm install
+
+      - name: Run tests
+        working-directory: backend
+        run: npm run test
+
+  build-and-push-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push backend image
+        working-directory: backend
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/fullstack-coursework-backend-image .
+          docker push ${{ secrets.DOCKER_USERNAME }}/fullstack-coursework-backend-image
+
+      - name: Build and push frontend image
+        working-directory: frontend
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/fullstack-coursework-frontend-image .
+          docker push ${{ secrets.DOCKER_USERNAME }}/fullstack-coursework-frontend-image
